@@ -1,23 +1,28 @@
 
 # leci po tablicy odległości i szuka następnego słowa, po czym dopisuje ostatnią literę
-def checkNext(index, dist, dna, result):
+def checkNext(index, dist, dna, result, usedTab):
+    usedTab[index] = 1
     for j in range(len(dist[index])):
         if dist[index][j] == 9:
             result += dna[j][len(dna[j]) - 1]
-            result = checkNext(j, dist, dna, result)
+            result = checkNext(j, dist, dna, result, usedTab)
             break
     return result
 
-def checkPrev(index, distPrev, dna, result):
+def checkPrev(index, distPrev, dna, result, counter, usedTab):
+    usedTab[index] = 1
     for j in range(len(dist[index])):
-        if distPrev[index][j] == 9:
+        #if len(result) >= 500:
+            #break
+        if distPrev[index][j] == 9 and usedTab[j] == 0:
             result = dna[j][0] + result
-            result = checkPrev(j, distPrev, dna, result)
+            result = checkPrev(j, distPrev, dna, result, counter+1, usedTab)
             break
+    print(counter)
     return result
 
 
-file = open("temp.txt", "r")
+file = open("abc.txt", "r")
 
 dna = file.readlines()
 
@@ -81,10 +86,14 @@ for d1 in dna:
 print(distPrev)
 
 
+usedTab = [0 for i in range(len(dna))]
 result = dna[0]
-result = checkNext(0, dist, dna, result)
+result = checkNext(0, dist, dna, result, usedTab)
 print(result)
 
-result = checkPrev(0, distPrev, dna, result)
+result = checkPrev(0, distPrev, dna, result, 0, usedTab)
 
 print(result)
+print(len(result))
+print(result[-10:])
+print(usedTab)
