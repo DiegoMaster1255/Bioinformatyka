@@ -1,39 +1,82 @@
+import sys
+
+
+nextIndex = 0
+prevIndex = 0
+
 
 # leci po tablicy odległości i szuka następnego słowa, po czym dopisuje ostatnią literę
-def checkNext(index, dist, dna, result, usedTab):
-    usedTab[index] = 1
+def checkNext(index):
+    used[index] = 1
+    possibleNext = []
+    global result
+    if len(result) >= N:
+        return
     for j in range(len(dist[index])):
-        if dist[index][j] == 9:
-            result += dna[j][len(dna[j]) - 1]
-            result = checkNext(j, dist, dna, result, usedTab)
-            break
-    return result
+        if dist[index][j] == maxCovers[index] and used[j] == 0:
+            possibleNext.append(j)
+    if len(possibleNext) == 0:
+        maxCovers[index] -= 1
+        global nextIndex
+        nextIndex = index
+    else:
+        if len(possibleNext) > 1:
+            nextChoice = checkAhead(possibleNext)
+        else:
+            nextChoice = possibleNext[0]
+        result += dna[nextChoice][maxCovers[index]:]
+        checkNext(nextChoice)
+    return
 
-def checkPrev(index, distPrev, dna, result, counter, usedTab):
-    usedTab[index] = 1
+
+def checkPrev(index):
+    used[index] = 1
+    possibleNext = []
+    global result
+    if len(result) >= N:
+        return
     for j in range(len(dist[index])):
-        #if len(result) >= 500:
-            #break
-        if distPrev[index][j] == 9 and usedTab[j] == 0:
-            result = dna[j][0] + result
-            result = checkPrev(j, distPrev, dna, result, counter+1, usedTab)
-            break
-    print(counter)
-    return result
+        if distPrev[index][j] == maxCovers[index] and used[j] == 0:
+            possibleNext.append(j)
+    if len(possibleNext) == 0:
+        maxCovers[index] -= 1
+        global prevIndex
+        prevIndex = index
+    else:
+        if len(possibleNext) > 1:
+            nextChoice = checkAhead(possibleNext)
+        else:
+            nextChoice = possibleNext[0]
+        result = dna[nextChoice][0:len(dna[nextChoice]) - maxCovers[index]] + result
+        checkPrev(nextChoice)
+    return
 
 
-file = open("abc.txt", "r")
+def checkAhead(indexList):
+    nextMax = 0
+    for index in indexList:
+        for j in range(len(dist[index])):
+            if nextMax < dist[index][j] < 10 and used[j] == 0:
+                nextMax = dist[index][j]
+                nextIx = index
+                if nextMax == 9:
+                    return nextIx
+    return nextIx
 
+
+file = open(sys.argv[1], "r")
+N = int(sys.argv[2])
+L = 10
 dna = file.readlines()
 
-
-
+print(dna)
 # Usunięcie \n z końca każdego słowa
 for i in range(len(dna) - 1):
     dna[i] = dna[i][:-1]
 print(dna)
-
 dist = [[0 for i in range(len(dna))] for j in range(len(dna))]
+distPrev = [[0 for i in range(len(dna))] for j in range(len(dna))]
+
 
 index = 0
 #porównuje każde słowo z każdym, wyliczając maksymalne pokrycie
@@ -53,20 +96,6 @@ for d1 in dna:
                         break
                 if dist[index][count] < current:
                     dist[index][count] = current
-        count += 1
-    index += 1
-
-print(dist)
-
-distPrev = [[0 for i in range(len(dna))] for j in range(len(dna))]
-
-print(len(d1))
-
-index = 0
-#porównuje każde słowo z każdym, wyliczając maksymalne pokrycie
-for d1 in dna:
-    count = 0
-    for d2 in dna:
         for i in range(len(d1) - 1, -1, -1):
             # jeśli litera pokrywa się z pierwszą literą drugiego słowa, zaczyna sprawdzać ile kolejnych też się pokrywa
             if d1[i] == d2[len(d2) - 1]:
@@ -80,20 +109,24 @@ for d1 in dna:
                         break
                 if distPrev[index][count] < current:
                     distPrev[index][count] = current
+
         count += 1
     index += 1
 
-print(distPrev)
 
-
-usedTab = [0 for i in range(len(dna))]
+used = [0 for i in range(len(dna))]
+maxCovers = [9 for i in range(len(dna))]
 result = dna[0]
-result = checkNext(0, dist, dna, result, usedTab)
-print(result)
 
-result = checkPrev(0, distPrev, dna, result, 0, usedTab)
 
-print(result)
-print(len(result))
-print(result[-10:])
-print(usedTab)
+while len(result) < N and 0 in used:
+    checkNext(nextIndex)
+    checkPrev(prevIndex)
+
+print("Rozwiązanie: " + result)
+counter = 0
+for i in used:
+    if i == 1:
+        counter += 1
+print("Różne słowa użyte w rozwiązaniu: " + str(counter))
+print("Długość rozwiązania: " + str(len(result)))
